@@ -1,90 +1,125 @@
-import datetime
+from model import Book, Magazine, ReferenceBook, StudentMember, ResearchStudent, FacultyMember, NotifiedMember
+from library_service import LibraryManager
+from storage import save_library, load_library
 
-class LibraryManager:
-    def __init__(self):
-        self.items = {}
-        self.members = {}
-        self.loans = {}
 
-    def register_item(self, item):
-        if item.item_id in self.items:
-            print("Item ID already exists")
-            return False
-        self.items[item.item_id] = item
-        return True
+def main():
+    library = LibraryManager()
 
-    def register_member(self, member):
-        if member.member_id in self.members:
-            print("Member ID already exists")
-            return False
-        self.members[member.member_id] = member
-        return True
+    try:
+        load_library(library)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print("Data loading error:", error)
+        return
 
-    def borrow_item(self, member_id, item_id):
-        if member_id not in self.members:
-            print("Member not found")
-            return False
-        if item_id not in self.items:
-            print("Item not found")
-            return False
+    while True:
+        print("\n===== LIBRARY MANAGEMENT SYSTEM =====")
+        print("1. Register Item")
+        print("2. Register Member")
+        print("3. Borrow Item")
+        print("4. Return Item")
+        print("5. View Reports")
+        print("6. Update Library Name")
+        print("7. Exit")
 
-        item = self.items[item_id]
-        member = self.members[member_id]
+        choice = input("Enter choice: ")
 
-        if not item.is_available:
-            print("Item not available")
-            return False
+        if choice == "1":
+            print("1. Book")
+            print("2. Magazine")
+            print("3. Reference Book")
 
-        if item.loan_period_days() == 0:
-            print("Reference book cannot be borrowed")
-            return False
+            item_choice = input("Select item type: ")
+            item_id = input("Enter Item ID: ")
+            title = input("Enter Title: ")
 
-        if not member.can_borrow():
-            print("Member limit exceeded")
-            return False
+            if item_choice == "1":
+                item = Book(item_id, title)
+            elif item_choice == "2":
+                item = Magazine(item_id, title)
+            elif item_choice == "3":
+                item = ReferenceBook(item_id, title)
+            else:
+                print("Invalid item type.")
+                continue
 
-        issue_date = datetime.date.today()
-        due_date = issue_date + datetime.timedelta(days=item.loan_period_days())
+            try:
+                library.register_item(item)
+                save_library(library)
+                print("Item registered successfully.")
+            except ValueError as error:
+                print(error)
 
-        item.is_available = False
-        member._active_loans.append(item_id)
-        self.loans[item_id] = {
-            "member_id": member_id,
-            "issue_date": str(issue_date),
-            "due_date": str(due_date)
-        }
+        elif choice == "2":
+            print("1. Student")
+            print("2. Research Student")
+            print("3. Faculty")
+            print("4. Notified Member")
 
-        if hasattr(member, 'send_notice'):
-            member.send_notice(f"{item_id} issued, due {due_date}")
+            member_choice = input("Select member type: ")
+            member_id = input("Enter Member ID: ")
+            name = input("Enter Name: ")
 
-        print(f"Borrow successful: {item_id} issued to {member_id}")
-        print(f"Due date: {due_date}")
-        return True
+            if member_choice == "1":
+                member = StudentMember(member_id, name)
+            elif member_choice == "2":
+                member = ResearchStudent(member_id, name)
+            elif member_choice == "3":
+                member = FacultyMember(member_id, name)
+            elif member_choice == "4":
+                member = NotifiedMember(member_id, name)
+            else:
+                print("Invalid member type.")
+                continue
 
-    def return_item(self, item_id):
-        if item_id not in self.loans:
-            print("Item not in active loans")
-            return False
+            try:
+                library.register_member(member)
+                save_library(library)
+                print("Member registered successfully.")
+            except ValueError as error:
+                print(error)
 
-        loan = self.loans[item_id]
-        member_id = loan["member_id"]
+        elif choice == "3":
+            member_id = input("Enter Member ID: ")
+            item_id = input("Enter Item ID: ")
 
-        due_date = datetime.date.fromisoformat(loan["due_date"])
-        today = datetime.date.today()
-        overdue = (today - due_date).days
-        if overdue < 0:
-            overdue = 0
+            try:
+                due_date = library.borrow_item(member_id, item_id)
+                save_library(library)
+                print("Borrow successful.")
+                print("Due Date:", due_date)
+            except ValueError as error:
+                print("Borrowing failed:", error)
 
-        fine = self.calculate_fine(overdue)
+        elif choice == "4":
+            item_id = input("Enter Item ID: ")
 
-        self.items[item_id].is_available = True
-        self.members[member_id]._active_loans.remove(item_id)
-        del self.loans[item_id]
+            try:
+                days, fine = library.return_item(item_id)
+                save_library(library)
+                print("Item returned successfully.")
+                print("Overdue Days:", days)
+                print("Fine:", fine)
+            except ValueError as error:
+                print("Return failed:", error)
 
-        print(f"Return successful: {item_id}")
-        print(f"Overdue days: {overdue}, Fine: {fine}")
-        return True
+        elif choice == "5":
+            library.display_reports()
 
-    @staticmethod
-    def calculate_fine(overdue_days):
-        return overdue_days * 10
+        elif choice == "6":
+            name = input("Enter new library name: ")
+            LibraryManager.set_library_name(name)
+            print("Library name updated.")
+
+        elif choice == "7":
+            save_library(library)
+            print("Library data saved.")
+            print("Thank you!")
+            break
+
+        else:
+            print("Invalid choice.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,13 @@
+{
+
+    "items": [
+        {
+            "type": "Book",
+            "item_id": "123",
+            "title": " mechanics",
+            "available": true
+        }
+    ],
+    "members": [],
+    "loans": {}
+}
