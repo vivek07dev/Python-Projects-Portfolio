@@ -1,7 +1,7 @@
 [
     {
         "student_id": "S101",
-        "name": "vivek",
+        "name": "rahul",
         "department": "CSE",
         "marks": [8, 65, 88]
     },
@@ -13,7 +13,7 @@
     },
     {
         "student_id": "S103",
-        "name": "Rahul",
+        "name": "vivek",
         "department": "IT",
         "marks": [120, 80, 70]
     }

@@ -164,12 +164,8 @@ def import_students(input_path):
 
     print("Error log: import_errors.txt")
 if __name__ == "__main__":
+        input_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "students_input.json"
+        )
 
-    input_path = input(
-        "Enter input file path (press Enter for default): "
-    )
-
-    if input_path.strip() == "":
-        input_path = "students_input.json"
-
-    import_students(input_path)
+        import_students(input_path)
